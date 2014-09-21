@@ -1,4 +1,4 @@
-package hob
+package pipes
 
 import (
 	"testing"
