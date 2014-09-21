@@ -16,12 +16,17 @@ func ReadFromPipe(filename string)([]byte, error){
 }
 
 // Write to Pipe, Block until content available, Read.
-func WriteBlockRead(filename string, msg []byte)([]byte, error){
+func WriteBlockRead(filename string, msg []byte, resp chan []byte)(error){
   err := WriteToPipe(filename, msg)
   if err != nil{
     return nil, err
   }
-  return ioutil.ReadFile(filename)
+  response, err := ReadFromPipe(filename)
+  if err != nil{
+    return nil, err
+  }
+  resp <- response
+  return nil
 }
 
 // Make a pipe.
