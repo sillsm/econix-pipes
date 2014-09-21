@@ -8,12 +8,11 @@ func TestServerClient(t *testing.T){
   MakeAPipe("First")
   
   var response = make(chan []byte)
-  var answer = make([]byte)
   
   go WriteBlockRead("First", []byte("First msg"), response)
   go WriteToPipe("First", []byte("Second msg\n"))
   
-  answer <- response
+  answer := <- response
   if string(answer) != "Second msg" {
     t.Errorf("Want %v, got %v ", "Second msg", string(answer))
   }
