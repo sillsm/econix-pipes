@@ -1,10 +1,7 @@
 package pipes
 
 import (
-  "fmt"
-  "log"
   "syscall"
-  //"os"
   "io/ioutil"
 )
 
