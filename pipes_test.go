@@ -10,7 +10,7 @@ func TestServerClient(t *testing.T){
   var response = make(chan []byte)
   var answer = make([]byte)
   
-  go WriteBlockRead("First, []byte("First msg"), response)
+  go WriteBlockRead("First", []byte("First msg"), response)
   go WriteToPipe("First", []byte("Second msg\n"))
   
   answer <- response
