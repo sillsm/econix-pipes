@@ -19,11 +19,11 @@ func ReadFromPipe(filename string)([]byte, error){
 func WriteBlockRead(filename string, msg []byte, resp chan []byte)(error){
   err := WriteToPipe(filename, msg)
   if err != nil{
-    return nil, err
+    return err
   }
   response, err := ReadFromPipe(filename)
   if err != nil{
-    return nil, err
+    return err
   }
   resp <- response
   return nil
