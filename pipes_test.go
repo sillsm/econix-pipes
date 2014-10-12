@@ -6,29 +6,10 @@ import (
 
 func TestReadBlockWrite(t *testing.T) {
 	MakeAPipe("First")
+        defer ClosePipe("First")
 	go WriteToPipe("First", []byte("First request"))
 
-	var comms = make(chan []byte)
-	go ReadBlockWrite("First", comms)
-	req := <-comms
-	if string(req) != "First request" {
-		t.Errorf("Want %v, got %v ", "First request", string(req))
-	}
-	comms <- []byte("Response")
-	resp, err := ReadFromPipe("First")
-	if err != nil {
-		t.Errorf("ReadFromPipe: %v", err)
-	}
-	if string(resp) != "Response" {
-		t.Errorf("Got %v, want %v ", string(resp), "Response")
-	}
-}
-
-func TestBetterReadBlockWrite(t *testing.T) {
-	MakeAPipe("First")
-	go WriteToPipe("First", []byte("First request"))
-
-	msg, _ := BetterReadBlockWrite("First")
+	msg, _ := ReadBlockWrite("First")
 	req := <-msg
 	if string(req) != "First request" {
 		t.Errorf("Want %v, got %v ", "First request", string(req))
@@ -43,10 +24,10 @@ func TestBetterReadBlockWrite(t *testing.T) {
 	}
 }
 
-func TestBetterWriteBlockRead(t *testing.T) {
+func TestWriteBlockRead(t *testing.T) {
 	MakeAPipe("Second")
-	//defer *to implement a close function*
-	msg, _ := BetterWriteBlockRead("Second")
+        defer ClosePipe("Second")
+	msg, _ := WriteBlockRead("Second")
 	msg <- []byte("1. Request")
 	req, err := ReadFromPipe("Second")
 	if err != nil {

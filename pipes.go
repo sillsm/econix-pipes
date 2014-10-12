@@ -3,6 +3,7 @@ package pipes
 import (
 	"io/ioutil"
 	"syscall"
+        "os"
 )
 
 // By default WriteToPipe blocks execution until there's a reader.
@@ -15,41 +16,19 @@ func ReadFromPipe(filename string) ([]byte, error) {
 	return ioutil.ReadFile(filename)
 }
 
-// Write to Pipe, Block until content available, Read.
-func WriteBlockRead(filename string, msg []byte, resp chan []byte) error {
-	err := WriteToPipe(filename, msg)
-	if err != nil {
-		return err
-	}
-	response, err := ReadFromPipe(filename)
-	if err != nil {
-		return err
-	}
-	resp <- response
-	return nil
+// Make a pipe.
+func MakeAPipe(name string) {
+	syscall.Mknod(name, syscall.S_IFIFO|0666, 0)
+}
+
+// Close a pipe.
+func ClosePipe(name string) error {
+        return os.Remove(name)
 }
 
 // Write to Pipe, Block until content available, Read.
 // Insert a callback thing here.
-func ReadBlockWrite(filename string, com chan []byte) error {
-	request, err := ReadFromPipe(filename)
-	if err != nil {
-		return err
-	}
-	// Communicate the request to listeners.
-	com <- request
-	// Block until other goroutines have created the response.
-	msg := <-com
-	err = WriteToPipe(filename, msg)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// Write to Pipe, Block until content available, Read.
-// Insert a callback thing here.
-func BetterReadBlockWrite(f string) (chan []byte, error) {
+func ReadBlockWrite(f string) (chan []byte, error) {
 	out := make(chan []byte)
 	go func() {
 		request, err := ReadFromPipe(f)
@@ -70,7 +49,7 @@ func BetterReadBlockWrite(f string) (chan []byte, error) {
 
 // Write to Pipe, Block until content available, Read.
 // Insert a callback thing here.
-func BetterWriteBlockRead(f string) (chan []byte, error) {
+func WriteBlockRead(f string) (chan []byte, error) {
 	out := make(chan []byte)
 	go func() {
 		// Writes to pipe when a signal is available on the channel.
@@ -89,7 +68,3 @@ func BetterWriteBlockRead(f string) (chan []byte, error) {
 	return out, nil
 }
 
-// Make a pipe.
-func MakeAPipe(name string) {
-	syscall.Mknod(name, syscall.S_IFIFO|0666, 0)
-}
