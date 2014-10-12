@@ -29,6 +29,25 @@ func WriteBlockRead(filename string, msg []byte, resp chan []byte)(error){
   return nil
 }
 
+// Write to Pipe, Block until content available, Read.
+// Insert a callback thing here.
+func ReadBlockWrite(filename string, com chan []byte)(error){
+  request, err := ReadFromPipe(filename)
+  if err != nil{
+    return err
+  }
+  // Communicate the request to listeners.
+  com <- request
+  // Block until other goroutines have created the response.
+  msg := <- com
+  err = WriteToPipe(filename, msg)
+  if err != nil{
+    return err
+  }
+  return nil
+}
+
+
 // Make a pipe.
 func MakeAPipe(name string){
   syscall.Mknod(name, syscall.S_IFIFO|0666, 0)

@@ -4,33 +4,22 @@ import (
 	"testing"
 )
 
-func TestServerClient(t *testing.T){
+func TestReadBlockWrite(t *testing.T){
   MakeAPipe("First")
-  
-  var response = make(chan []byte)
-  
-  go WriteBlockRead("First", []byte("First msg"), response)
-  go WriteToPipe("First", []byte("Second msg\n"))
-  
-  answer := <- response
-  if string(answer) != "Second msg" {
-    t.Errorf("Want %v, got %v ", "Second msg", string(answer))
+  go WriteToPipe("First", []byte("First request"))
+
+  var comms = make(chan []byte)
+  go ReadBlockWrite ("First", comms)  
+  req := <- comms
+  if string(req) != "First request" {
+    t.Errorf("Want %v, got %v ", "First request", string(req))
   }
-  
-  /*
-  
-  go WriteToPipe("First", []byte("First msg\n"))
-  go WriteToPipe("First", []byte("Second msg\n"))
-  go WriteToPipe("First", []byte("Third msg\n"))
-  
-   
-  b, err := ReadFromPipe("First")
+  comms <- []byte("Response")
+  resp, err := ReadFromPipe("First")
   if err != nil {
-    t.Errorf("ReadFromPipe(\"First\"): %v ", err)
+    t.Errorf("ReadFromPipe: %v", err)
   }
-  
-  if string(b) != "First msg\n" {
-    t.Errorf("Want %v, got %v ", "First msg\n", string(b))
-  }
-  */
+  if string(resp) != "Response" {
+    t.Errorf("Got %v, want %v ", string(resp), "Response")
+  } 
 }
