@@ -48,16 +48,15 @@ func TestWriteBlockRead(t *testing.T) {
 
 
 func TestStressTestWriteAndReadBlock(t *testing.T) {
-      limit := 500 
+      limit := 1000 
       requestNum := 10000
       fd := make (chan string, 40000)
       go func () {
         sem := make(chan bool, limit)
         for i := 0; i < requestNum; i++ {
+          go func(i int) {
           path := strconv.Itoa(i)
           MakeAPipe(path)
-         
-          defer ClosePipe(path)
              
           // Scenario: interface got http request, wrote it to pipe.
              sem <- true // Push Semaphore.
@@ -69,7 +68,9 @@ func TestStressTestWriteAndReadBlock(t *testing.T) {
                t.Errorf("Got %v, want %v", string(msg), "Final response")
              }
              <- sem      // Pop Semaphore.
-         }
+          ClosePipe(path)
+         }(i)
+        }
       }()
 
      for i := 0; i < requestNum; i++ {
