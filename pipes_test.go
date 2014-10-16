@@ -1,6 +1,7 @@
 package pipes
 
 import (
+        "strconv"
 	"testing"
 )
 
@@ -44,6 +45,45 @@ func TestWriteBlockRead(t *testing.T) {
 	}
 	//msg
 }
+
+
+func TestStressTestWriteAndReadBlock(t *testing.T) {
+      limit := 500 
+      requestNum := 10000
+      fd := make (chan string, 40000)
+      go func () {
+        sem := make(chan bool, limit)
+        for i := 0; i < requestNum; i++ {
+          path := strconv.Itoa(i)
+          MakeAPipe(path)
+         
+          defer ClosePipe(path)
+             
+          // Scenario: interface got http request, wrote it to pipe.
+             sem <- true // Push Semaphore.
+             req, _ := WriteBlockRead(path)
+             req <- []byte(path + "msg")
+             fd <- path
+             msg := <- req
+             if string(msg) != "Final response" {
+               t.Errorf("Got %v, want %v", string(msg), "Final response")
+             }
+             <- sem      // Pop Semaphore.
+         }
+      }()
+
+     for i := 0; i < requestNum; i++ {
+        path := <- fd // Pull a descriptor from written queue.
+        req, _  := ReadBlockWrite(path)
+        msg := <- req
+        if string(msg) != path + "msg" {
+           t.Errorf("Got %v, want %v", string(msg), path + "msg")
+        }         
+        req <- []byte("Final response")
+      }
+
+}
+
 
 //TODO:
 //1. Handle errors properly by a struct of stuff
